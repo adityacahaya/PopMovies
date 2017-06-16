@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pop Movies</string>
+    <string name="detail_film">Detail Film</string>
+
+    <!-- string dalam spinner -->
+    <string name="popular">Most Popular</string>
+    <string name="popular_param">popular</string>
+    <string name="top_rated">Highest Rated</string>
+    <string name="top_rated_param">top_rated</string>
+    <string name="favorite">Favorite</string>
+    <string name="favorite_param">favorite</string>
+
+    <!-- string untuk error message jika ga connect -->
+    <string name="error_message">Failed to get results. Please try again.</string>
+
+    <!-- string untuk activity_detail -->
+    <string name="title">Film Title</string>
+    <string name="relase">RELASE DATE</string>
+    <string name="rating">RATING</string>
+    <string name="overview">OVERVIEW</string>
+    <string name="favortie">FAVORITE</string>
+    <string name="trailer">Trailer</string>
+    <string name="review">Review</string>
+
+    <!-- string untuk rv trailer -->
+    <string name="trailer_name">Trailer Name</string>
+    <string name="trailer_type">Trailer Type</string>
+    <string name="author_review">Author Name</string>
+    <string name="content_review">Content Review</string>
+
+</resources>
