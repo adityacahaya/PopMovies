@@ -1,6 +1,7 @@
 package com.example.android.popmovies;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -17,6 +18,7 @@ import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.popmovies.adapter.GridViewAdapter;
 import com.example.android.popmovies.data.FilmContract;
@@ -63,10 +65,56 @@ public class MainActivity extends AppCompatActivity implements
 
         ButterKnife.bind(this);
         setupSpinner();
+    }
 
-        if ((savedInstanceState != null)) {
-            int positionGrid = savedInstanceState.getInt(GRIDVIEW_POSITION);
-            mGridView.setSelection(positionGrid);
+    @Override
+    protected void onSaveInstanceState(Bundle state) {
+        Log.i("ccc","save");
+        state.putInt(GRIDVIEW_POSITION, mGridView.getFirstVisiblePosition());
+        super.onSaveInstanceState(state);
+    }
+
+    // in my device this method can keep the position of GridView for 'Most Popular' or
+    // 'High Rated' selection but this methoc can't keep the position of GridView for 'Favorite'
+    // selection, because the metho ifSelectionFavorite() make set a new Adapter when the spinner
+    // get select 'Favorite'. I must to use ifSelectionFavorite() in onResume() because if i click
+    // favorite button in DetailActivity, the 'Favorite' selection must update with new Adapter
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        Log.i("ccc","restore");
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            final int positionGrid = savedInstanceState.getInt(GRIDVIEW_POSITION);
+            mGridView.post(new Runnable() {
+                @Override
+                public void run() {
+                    mGridView.setSelection(positionGrid);
+                }
+            });
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i("ccc","resume");
+        ifSelectionFavorite();
+    }
+
+    public void ifSelectionFavorite(){
+        String selection = (String) mSpinner.getSelectedItem();
+        if (selection.equals(getString(R.string.favorite))) {
+            mLoadingIndicator.setVisibility(View.INVISIBLE);
+            dataFilmArrayList = getFavoriteFilm();
+            if (getFavoriteFilm().size() > 0) {
+                showJsonDataView();
+                mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
+            } else {
+                String message = "You haven't add Favorite Film yet :(";
+                mErrorMessageDisplay.setText(message);
+                mGridView.setVisibility(View.INVISIBLE);
+                mErrorMessageDisplay.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -230,33 +278,4 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle state) {
-        int index = mGridView.getFirstVisiblePosition();
-        state.putInt(GRIDVIEW_POSITION, index);
-        super.onSaveInstanceState(state);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        ifSelectionFavorite();
-    }
-
-    private void ifSelectionFavorite(){
-        String selection = (String) mSpinner.getSelectedItem();
-        if (selection.equals(getString(R.string.favorite))) {
-            mLoadingIndicator.setVisibility(View.INVISIBLE);
-            dataFilmArrayList = getFavoriteFilm();
-            if (getFavoriteFilm().size() > 0) {
-                showJsonDataView();
-                mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
-            } else {
-                String message = "You haven't add Favorite Film yet :(";
-                mErrorMessageDisplay.setText(message);
-                mGridView.setVisibility(View.INVISIBLE);
-                mErrorMessageDisplay.setVisibility(View.VISIBLE);
-            }
-        }
-    }
 }
