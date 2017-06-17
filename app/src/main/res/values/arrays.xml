@@ -2,8 +2,8 @@
 <resources>
     <!-- array untuk isi spinner -->
     <string-array name="spinner_mainactivity_array">
-        <item>Favorite</item>
         <item>Most Popular</item>
         <item>Highest Rated</item>
+        <item>Favorite</item>
     </string-array>
 </resources>

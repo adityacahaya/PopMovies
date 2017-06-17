@@ -1,12 +1,15 @@
 package com.example.android.popmovies.adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.example.android.popmovies.R;
 import com.example.android.popmovies.film_class.DataFilm;
@@ -22,15 +25,12 @@ public class GridViewAdapter extends BaseAdapter {
 
     private Context mContext;
     private ArrayList<DataFilm> mData;
-    SparseBooleanArray booleanArray = new SparseBooleanArray();
-    private final LayoutInflater mInflater;
 
     private String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/w185/";
 
     public GridViewAdapter(Context context, ArrayList<DataFilm> data){
         mContext = context;
         mData = data;
-        mInflater = LayoutInflater.from(context);
     }
 
     @Override
@@ -44,24 +44,35 @@ public class GridViewAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View grid;
+        ViewHolderItem viewHolder;
+
         if (convertView == null) {
-            grid = mInflater.inflate(R.layout.layout_gridview, parent, false);
-            grid.setTag(R.id.imageview_in_gridview_main_activity, grid.findViewById(R.id.imageview_in_gridview_main_activity));
+
+            // inflate the layout
+            LayoutInflater inflater = ((Activity) mContext).getLayoutInflater();
+            convertView = inflater.inflate(R.layout.layout_gridview, parent, false);
+
+            // well set up the ViewHolder
+            viewHolder = new ViewHolderItem();
+            viewHolder.imageView = (ImageView) convertView.findViewById(R.id.imageview_in_gridview_main_activity);
+
+            // store the holder with the view.
+            convertView.setTag(viewHolder);
+
         } else {
-            grid = (View) convertView;
+            viewHolder = (ViewHolderItem) convertView.getTag();
         }
-        ImageView imageView = (ImageView)grid.findViewById(R.id.imageview_in_gridview_main_activity);
+
         Picasso.with(mContext)
                 .load(BASE_IMAGE_URL+mData.get(position).getmPoster())
                 .placeholder(R.mipmap.ic_launcher)
                 .error(R.mipmap.ic_launcher)
-                .into(imageView);
-        if(booleanArray.get(position)){
-            grid.setActivated(true);
-        } else {
-            grid.setActivated(false);
-        }
-        return grid;
+                .into(viewHolder.imageView);
+
+        return convertView;
+    }
+
+    private static class ViewHolderItem{
+        ImageView imageView;
     }
 }

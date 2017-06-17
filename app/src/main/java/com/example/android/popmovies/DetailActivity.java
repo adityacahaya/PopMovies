@@ -3,17 +3,19 @@ package com.example.android.popmovies;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.content.res.ResourcesCompat;
-import android.support.v7.app.ActionBar;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.ScrollView;
@@ -23,7 +25,6 @@ import android.widget.Toast;
 import com.example.android.popmovies.adapter.RecycleAdapter;
 import com.example.android.popmovies.adapter.RecycleAdapterReview;
 import com.example.android.popmovies.data.FilmContract;
-import com.example.android.popmovies.data.FilmDbHelper;
 import com.example.android.popmovies.film_class.DataDetailFilm;
 import com.example.android.popmovies.film_class.DataDetailFilmReview;
 import com.example.android.popmovies.film_class.DataFilm;
@@ -48,12 +49,17 @@ import static com.example.android.popmovies.MainActivity.SEND_DATA;
 public class DetailActivity extends AppCompatActivity implements
         RecycleAdapter.RecycleAdapterOnClickHandler{
 
-    @BindView(R.id.title_detail_activity) TextView mTitle;
     @BindView(R.id.poster_detail) ImageView mPoster;
     @BindView(R.id.relase_detail_view) TextView mRelaseDate;
     @BindView(R.id.rating_detail_view) TextView mRating;
     @BindView(R.id.overview_detail_view) TextView mOverview;
     @BindView(R.id.favorite_detail_view) TextView mFavorite;
+    @BindView(R.id.scroll) NestedScrollView mScrollView;
+    @BindView(R.id.collapsing_toolbar) CollapsingToolbarLayout collapsingToolbar;
+    @BindView(R.id.toolbar) Toolbar toolbar;
+    @BindView(R.id.rv_trailer) RecyclerView mRecyclerView;
+    @BindView(R.id.rv_review) RecyclerView mRecyclerViewReview;
+
 
     private DataFilm dataFilm;
 
@@ -63,12 +69,14 @@ public class DetailActivity extends AppCompatActivity implements
     private ArrayList<DataDetailFilm> dataDetailFilmArrayList;
     private ArrayList<DataDetailFilmReview> dataDetailFilmReviewArrayList;
 
-    @BindView(R.id.rv_trailer) RecyclerView mRecyclerView;
+
     private RecycleAdapter mRecycleAdapter;
-    @BindView(R.id.rv_review) RecyclerView mRecyclerViewReview;
     private RecycleAdapterReview mRecycleAdapterReview;
 
     private static final String LIFECYCLE_CALLBACKS_TEXT_KEY = "callbacks";
+    private static final String ARTICLE_SCROLL_POSITION = "ARTICLE_SCROLL_POSITION";
+    private static final String TRAILER_SAVE_INSTANCE = "TRAILER_SAVE_INSTANCE";
+    private static final String REVIEW_SAVE_INSTANCE = "REVIEW_SAVE_INSTANCE";
 
     private static final int TRAILER_SEARCH_LOADER = 1;
     private static final String TRAILER_URL_EXTRA = "query-trailer";
@@ -80,15 +88,18 @@ public class DetailActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        ActionBar ab = getSupportActionBar();
-        ab.setDisplayHomeAsUpEnabled(true);
-
         ButterKnife.bind(this);
 
         Intent intent = getIntent();
-        dataFilm = (DataFilm) intent.getParcelableExtra(SEND_DATA);
+        if (intent != null && intent.hasExtra(SEND_DATA)) {
+            dataFilm = intent.getParcelableExtra(SEND_DATA);
+        }
 
-        mTitle.setText(dataFilm.getmTitle());
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        collapsingToolbar.setTitle(dataFilm.getmTitle());
+
         Picasso.with(this)
                 .load(BASE_IMAGE_URL+dataFilm.getmPoster())
                 .placeholder(R.mipmap.ic_launcher)
@@ -113,12 +124,32 @@ public class DetailActivity extends AppCompatActivity implements
         mRecyclerViewReview.setAdapter(mRecycleAdapterReview);
         mRecyclerViewReview.setNestedScrollingEnabled(false);
 
-        makeSearchQuery(String.valueOf(dataFilm.getmFilmId()));
-
         if (checkFilm()){
             mFavorite.setTextColor(ResourcesCompat.getColor(getResources(), R.color.yelow_favorite, null));
         }else{
             mFavorite.setTextColor(ResourcesCompat.getColor(getResources(), R.color.white, null));
+        }
+
+        if (savedInstanceState != null){
+            if (savedInstanceState.containsKey(LIFECYCLE_CALLBACKS_TEXT_KEY)) {
+                int allPreviousLifecycleCallbacks = savedInstanceState
+                        .getInt(LIFECYCLE_CALLBACKS_TEXT_KEY);
+                mFavorite.setTextColor(allPreviousLifecycleCallbacks);
+            }
+
+            dataDetailFilmArrayList = savedInstanceState.getParcelableArrayList(TRAILER_SAVE_INSTANCE);
+            mRecycleAdapter.setTrailerData(dataDetailFilmArrayList);
+            dataDetailFilmReviewArrayList = savedInstanceState.getParcelableArrayList(REVIEW_SAVE_INSTANCE);
+            mRecycleAdapterReview.setReviewData(dataDetailFilmReviewArrayList);
+
+            final int[] position = savedInstanceState.getIntArray(ARTICLE_SCROLL_POSITION);
+            mScrollView.post(new Runnable() {
+                public void run() {
+                    mScrollView.scrollTo(position[0], position[1]);
+                }
+            });
+        }else{
+            makeSearchQuery(String.valueOf(dataFilm.getmFilmId()));
         }
     }
 
@@ -133,7 +164,11 @@ public class DetailActivity extends AppCompatActivity implements
     }
 
     public void openTrailer(String idYoutube) {
-        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(BASE_TRAILER_URL+idYoutube)));
+        Uri webpage = Uri.parse(BASE_TRAILER_URL+idYoutube);
+        Intent intent = new Intent(Intent.ACTION_VIEW, webpage);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
     }
 
     @Override
@@ -143,21 +178,15 @@ public class DetailActivity extends AppCompatActivity implements
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
         int color = mFavorite.getCurrentTextColor();
         outState.putInt(LIFECYCLE_CALLBACKS_TEXT_KEY, color);
-    }
 
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey(LIFECYCLE_CALLBACKS_TEXT_KEY)) {
-                int allPreviousLifecycleCallbacks = savedInstanceState
-                        .getInt(LIFECYCLE_CALLBACKS_TEXT_KEY);
-                mFavorite.setTextColor(allPreviousLifecycleCallbacks);
-            }
-        }
+        outState.putParcelableArrayList(TRAILER_SAVE_INSTANCE,dataDetailFilmArrayList);
+        outState.putParcelableArrayList(REVIEW_SAVE_INSTANCE,dataDetailFilmReviewArrayList);
+
+        outState.putIntArray(ARTICLE_SCROLL_POSITION, new int[]{ mScrollView.getScrollX(), mScrollView.getScrollY()});
+
+        super.onSaveInstanceState(outState);
     }
 
     @OnClick(R.id.favorite_detail_view)

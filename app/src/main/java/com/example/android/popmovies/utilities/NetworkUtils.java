@@ -17,7 +17,7 @@ public final class NetworkUtils {
 
     final static String THEMOVIEDB_BASE_URL = "http://api.themoviedb.org/3/movie";
     final static String API                 = "api_key";
-    final static String API_KEY             = "user API";
+    final static String API_KEY             = com.example.android.popmovies.BuildConfig.THE_MOVIE_DB_API_TOKEN;
 
     final static String TRAILER = "videos";
     final static String REVIEWS = "reviews";

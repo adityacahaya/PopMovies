@@ -38,21 +38,20 @@ import butterknife.ButterKnife;
 import butterknife.OnItemClick;
 import butterknife.OnItemSelected;
 
+import static android.util.Log.i;
+
 public class MainActivity extends AppCompatActivity implements
         LoaderCallbacks<List<DataFilm>> {
 
-    @BindView(R.id.spinner_main_activity)
-    Spinner mSpinner;
-    @BindView(R.id.tv_error_message_display)
-    TextView mErrorMessageDisplay;
-    @BindView(R.id.pb_loading_indicator)
-    ProgressBar mLoadingIndicator;
-    @BindView(R.id.gridView_main_activity)
-    GridView mGridView;
+    @BindView(R.id.spinner_main_activity) Spinner mSpinner;
+    @BindView(R.id.tv_error_message_display) TextView mErrorMessageDisplay;
+    @BindView(R.id.pb_loading_indicator) ProgressBar mLoadingIndicator;
+    @BindView(R.id.gridView_main_activity) GridView mGridView;
 
     private ArrayList<DataFilm> dataFilmArrayList;
 
     public final static String SEND_DATA = "send-data-to-detail";
+    public final static String GRIDVIEW_POSITION = "gridviewPosition";
 
     private static final int FILM_SEARCH_LOADER = 1;
     private static final String SEARCH_QUERY_URL_EXTRA = "query";
@@ -64,6 +63,11 @@ public class MainActivity extends AppCompatActivity implements
 
         ButterKnife.bind(this);
         setupSpinner();
+
+        if ((savedInstanceState != null)) {
+            int positionGrid = savedInstanceState.getInt(GRIDVIEW_POSITION);
+            mGridView.setSelection(positionGrid);
+        }
     }
 
     @OnItemClick(R.id.gridView_main_activity)
@@ -85,17 +89,7 @@ public class MainActivity extends AppCompatActivity implements
             } else if (selection.equals(getString(R.string.top_rated))) {
                 makeSearchQuery(getString(R.string.top_rated_param));
             } else if (selection.equals(getString(R.string.favorite))) {
-                mLoadingIndicator.setVisibility(View.INVISIBLE);
-                dataFilmArrayList = getFavoriteFilm();
-                if (getFavoriteFilm().size() > 0) {
-                    showJsonDataView();
-                    mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
-                } else {
-                    String message = "You haven't add Favorite Film yet :(";
-                    mErrorMessageDisplay.setText(message);
-                    mGridView.setVisibility(View.INVISIBLE);
-                    mErrorMessageDisplay.setVisibility(View.VISIBLE);
-                }
+                ifSelectionFavorite();
             }
         }
     }
@@ -236,4 +230,33 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle state) {
+        int index = mGridView.getFirstVisiblePosition();
+        state.putInt(GRIDVIEW_POSITION, index);
+        super.onSaveInstanceState(state);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ifSelectionFavorite();
+    }
+
+    private void ifSelectionFavorite(){
+        String selection = (String) mSpinner.getSelectedItem();
+        if (selection.equals(getString(R.string.favorite))) {
+            mLoadingIndicator.setVisibility(View.INVISIBLE);
+            dataFilmArrayList = getFavoriteFilm();
+            if (getFavoriteFilm().size() > 0) {
+                showJsonDataView();
+                mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
+            } else {
+                String message = "You haven't add Favorite Film yet :(";
+                mErrorMessageDisplay.setText(message);
+                mGridView.setVisibility(View.INVISIBLE);
+                mErrorMessageDisplay.setVisibility(View.VISIBLE);
+            }
+        }
+    }
 }
