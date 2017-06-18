@@ -99,7 +99,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:padding="10dp"
-                    tools:text="FAVORITE"
+                    android:text="@string/favortie"
                     android:textColor="@color/white"
                     android:textSize="@dimen/text_size"
                     android:textStyle="bold" />
@@ -126,7 +126,7 @@
                 android:textSize="@dimen/text_size"
                 android:textStyle="bold"
                 android:padding="10dp"
-                tools:text="Trailer" />
+                android:text="@string/trailer" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/rv_trailer"
@@ -147,7 +147,7 @@
                 android:textSize="@dimen/text_size"
                 android:textStyle="bold"
                 android:padding="10dp"
-                tools:text="Review" />
+                android:text="@string/review" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/rv_review"
