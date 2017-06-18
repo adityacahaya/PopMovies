@@ -1,9 +1,7 @@
 package com.example.android.popmovies;
 
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -13,17 +11,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.android.popmovies.adapter.GridViewAdapter;
 import com.example.android.popmovies.data.FilmContract;
-import com.example.android.popmovies.data.FilmDbHelper;
-import com.example.android.popmovies.film_class.DataDetailFilmReview;
 import com.example.android.popmovies.film_class.DataFilm;
 import com.example.android.popmovies.utilities.JsonUtils;
 import com.example.android.popmovies.utilities.NetworkUtils;
@@ -38,9 +34,6 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnItemClick;
-import butterknife.OnItemSelected;
-
-import static android.util.Log.i;
 
 public class MainActivity extends AppCompatActivity implements
         LoaderCallbacks<List<DataFilm>> {
@@ -56,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements
     public final static String GRIDVIEW_POSITION = "gridviewPosition";
 
     private static final int FILM_SEARCH_LOADER = 1;
+    private static final int DB_SEARCH_LOADER = 2;
     private static final String SEARCH_QUERY_URL_EXTRA = "query";
 
     @Override
@@ -65,32 +59,48 @@ public class MainActivity extends AppCompatActivity implements
 
         ButterKnife.bind(this);
         setupSpinner();
+
+        mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Log.i("ccc", "onSpinnerSelected");
+                String selection = (String) mSpinner.getSelectedItem();
+                if (!TextUtils.isEmpty(selection)) {
+                    if (selection.equals(getString(R.string.popular))) {
+                        Log.i("ccc", "onPopular");
+                        makeSearchQuery(getString(R.string.popular_param));
+                    } else if (selection.equals(getString(R.string.top_rated))) {
+                        Log.i("ccc", "onTopRate");
+                        makeSearchQuery(getString(R.string.top_rated_param));
+                    } else if (selection.equals(getString(R.string.favorite))) {
+                        Log.i("ccc", "onFavorite");
+                        new Callback().makeSearchQuery();
+                    }
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
     }
 
     @Override
     protected void onSaveInstanceState(Bundle state) {
-        Log.i("ccc","save");
+        Log.i("ccc","save MainActivity");
         state.putInt(GRIDVIEW_POSITION, mGridView.getFirstVisiblePosition());
+        Log.i("ccc",state.getInt(GRIDVIEW_POSITION)+"");
         super.onSaveInstanceState(state);
     }
 
-    // in my device this method can keep the position of GridView for 'Most Popular' or
-    // 'High Rated' selection but this methoc can't keep the position of GridView for 'Favorite'
-    // selection, because the metho ifSelectionFavorite() make set a new Adapter when the spinner
-    // get select 'Favorite'. I must to use ifSelectionFavorite() in onResume() because if i click
-    // favorite button in DetailActivity, the 'Favorite' selection must update with new Adapter
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         Log.i("ccc","restore");
         super.onRestoreInstanceState(savedInstanceState);
         if (savedInstanceState != null) {
             final int positionGrid = savedInstanceState.getInt(GRIDVIEW_POSITION);
-            mGridView.post(new Runnable() {
-                @Override
-                public void run() {
-                    mGridView.setSelection(positionGrid);
-                }
-            });
+            mGridView.setSelection(positionGrid);
+            Log.i("ccc",positionGrid+"");
         }
     }
 
@@ -98,22 +108,15 @@ public class MainActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
         Log.i("ccc","resume");
-        ifSelectionFavorite();
+        ifeFavoriteSelection();
     }
 
-    public void ifSelectionFavorite(){
+    public void ifeFavoriteSelection(){
         String selection = (String) mSpinner.getSelectedItem();
-        if (selection.equals(getString(R.string.favorite))) {
-            mLoadingIndicator.setVisibility(View.INVISIBLE);
-            dataFilmArrayList = getFavoriteFilm();
-            if (getFavoriteFilm().size() > 0) {
-                showJsonDataView();
-                mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
-            } else {
-                String message = "You haven't add Favorite Film yet :(";
-                mErrorMessageDisplay.setText(message);
-                mGridView.setVisibility(View.INVISIBLE);
-                mErrorMessageDisplay.setVisibility(View.VISIBLE);
+        if (!TextUtils.isEmpty(selection)) {
+            if (selection.equals(getString(R.string.favorite))) {
+                Log.i("ccc", "onFavorite");
+                new Callback().makeSearchQuery();
             }
         }
     }
@@ -126,20 +129,6 @@ public class MainActivity extends AppCompatActivity implements
         mBundle.putParcelable(SEND_DATA, dataFilm);
         intent.putExtras(mBundle);
         startActivity(intent);
-    }
-
-    @OnItemSelected(R.id.spinner_main_activity)
-    void onItemSelected() {
-        String selection = (String) mSpinner.getSelectedItem();
-        if (!TextUtils.isEmpty(selection)) {
-            if (selection.equals(getString(R.string.popular))) {
-                makeSearchQuery(getString(R.string.popular_param));
-            } else if (selection.equals(getString(R.string.top_rated))) {
-                makeSearchQuery(getString(R.string.top_rated_param));
-            } else if (selection.equals(getString(R.string.favorite))) {
-                ifSelectionFavorite();
-            }
-        }
     }
 
     private void setupSpinner() {
@@ -188,8 +177,10 @@ public class MainActivity extends AppCompatActivity implements
                 }
 
                 if (dataFilms != null) {
+                    Log.i("ccc","DeliverResult");
                     deliverResult(dataFilms);
                 } else {
+                    Log.i("ccc","LoadNew");
                     mLoadingIndicator.setVisibility(View.VISIBLE);
                     mGridView.setVisibility(View.INVISIBLE);
                     forceLoad();
@@ -237,6 +228,7 @@ public class MainActivity extends AppCompatActivity implements
 
         if (dataFilms != null) {
             showJsonDataView();
+            Log.i("ccc","onLoadFinish");
             dataFilmArrayList = (ArrayList) dataFilms;
             mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
         } else {
@@ -250,32 +242,79 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
-    public ArrayList<DataFilm> getFavoriteFilm() {
+    private class Callback implements LoaderManager.LoaderCallbacks<List<DataFilm>>{
 
-        ArrayList<DataFilm> dataFilms = new ArrayList<>();
-
-        Cursor c = getContentResolver().query(FilmContract.FavoriteEntry.CONTENT_URI,
-                null,
-                null,
-                null,
-                null);
-
-        if (c.moveToFirst()) {
-            do {
-                DataFilm dataFilm = new DataFilm();
-                dataFilm.setmTitle(c.getString(c.getColumnIndex(FilmContract.FavoriteEntry.COLUMN_TITLE)));
-                dataFilm.setmPoster(c.getString(c.getColumnIndex(FilmContract.FavoriteEntry.COLUMN_POSTER)));
-                dataFilm.setmOverview(c.getString(c.getColumnIndex(FilmContract.FavoriteEntry.COLUMN_OVERVIEW)));
-                dataFilm.setmRating(c.getDouble(c.getColumnIndex(FilmContract.FavoriteEntry.COLUMN_RATING)));
-                dataFilm.setmRelaseDate(c.getString(c.getColumnIndex(FilmContract.FavoriteEntry.COLUMN_DATE)));
-                dataFilm.setmFilmId(c.getLong(c.getColumnIndex(FilmContract.FavoriteEntry.COLUMN_FILMID)));
-                dataFilms.add(dataFilm);
-            } while (c.moveToNext());
+        public void makeSearchQuery() {
+            LoaderManager loaderManager = getSupportLoaderManager();
+            Loader<List<DataFilm>> searchLoader = loaderManager.getLoader(DB_SEARCH_LOADER);
+            if (searchLoader == null) {
+                Log.i("ccc","init");
+                loaderManager.initLoader(DB_SEARCH_LOADER, null, this);
+            } else {
+                loaderManager.restartLoader(DB_SEARCH_LOADER, null, this);
+            }
         }
-        c.close();
 
-        return dataFilms;
+        @Override
+        public Loader<List<DataFilm>> onCreateLoader(int id, final Bundle args) {
+            return new AsyncTaskLoader<List<DataFilm>>(MainActivity.this){
+                List<DataFilm> dataFilms;
+                @Override
+                protected void onStartLoading() {
+                    if (dataFilms != null) {
+                        Log.i("ccc","deliver");
+                        deliverResult(dataFilms);
+                    } else {
+                        forceLoad();
+                    }
+                }
+                @Override
+                public List<DataFilm> loadInBackground() {
+                    Log.i("ccc","load");
+                    ArrayList<DataFilm> dataFilms = new ArrayList<>();
+                    Cursor c = getContentResolver().query(FilmContract.FavoriteEntry.CONTENT_URI,
+                            null,
+                            null,
+                            null,
+                            null);
+                    if (c.moveToFirst()) {
+                        do {
+                            DataFilm dataFilm = new DataFilm();
+                            dataFilm.setmTitle(c.getString(c.getColumnIndex(FilmContract.FavoriteEntry.COLUMN_TITLE)));
+                            dataFilm.setmPoster(c.getString(c.getColumnIndex(FilmContract.FavoriteEntry.COLUMN_POSTER)));
+                            dataFilm.setmOverview(c.getString(c.getColumnIndex(FilmContract.FavoriteEntry.COLUMN_OVERVIEW)));
+                            dataFilm.setmRating(c.getDouble(c.getColumnIndex(FilmContract.FavoriteEntry.COLUMN_RATING)));
+                            dataFilm.setmRelaseDate(c.getString(c.getColumnIndex(FilmContract.FavoriteEntry.COLUMN_DATE)));
+                            dataFilm.setmFilmId(c.getLong(c.getColumnIndex(FilmContract.FavoriteEntry.COLUMN_FILMID)));
+                            dataFilms.add(dataFilm);
+                        } while (c.moveToNext());
+                    }
+                    c.close();
+                    return dataFilms;
+                }
+                @Override
+                public void deliverResult(List<DataFilm> data) {
+                    dataFilms = data;
+                    super.deliverResult(data);
+                }
+            };
+        }
 
+        @Override
+        public void onLoadFinished(Loader<List<DataFilm>> loader, List<DataFilm> dataFilms) {
+            mLoadingIndicator.setVisibility(View.INVISIBLE);
+            if (dataFilms != null) {
+                showJsonDataView();
+                dataFilmArrayList = (ArrayList) dataFilms;
+                mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
+            } else {
+                showErrorMessage();
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<List<DataFilm>> loader) {
+
+        }
     }
-
 }
