@@ -75,9 +75,9 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:padding="10dp"
-                    android:text="@string/relase"
+                    tools:text="RELASE DATE"
                     android:textColor="@color/white"
-                    android:textSize="15sp"
+                    android:textSize="@dimen/text_size"
                     android:textStyle="bold" />
 
                 <TextView
@@ -87,9 +87,9 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:padding="10dp"
-                    android:text="@string/rating"
+                    tools:text="RATING"
                     android:textColor="@color/white"
-                    android:textSize="15sp"
+                    android:textSize="@dimen/text_size"
                     android:textStyle="bold" />
 
                 <TextView
@@ -99,9 +99,9 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:padding="10dp"
-                    android:text="@string/favortie"
+                    tools:text="FAVORITE"
                     android:textColor="@color/white"
-                    android:textSize="15sp"
+                    android:textSize="@dimen/text_size"
                     android:textStyle="bold" />
 
             </LinearLayout>
@@ -123,10 +123,10 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="15sp"
+                android:textSize="@dimen/text_size"
                 android:textStyle="bold"
                 android:padding="10dp"
-                android:text="@string/trailer" />
+                tools:text="Trailer" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/rv_trailer"
@@ -144,10 +144,10 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="15sp"
+                android:textSize="@dimen/text_size"
                 android:textStyle="bold"
                 android:padding="10dp"
-                android:text="@string/review" />
+                tools:text="Review" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/rv_review"

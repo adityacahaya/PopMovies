@@ -104,6 +104,9 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    // if user click an item in 'Favorite' list, after user back from DetailActivity even user
+    // click favortie or not, the scroll position in 'Favorite' list will not back to before because
+    // the adapter of GridView will update with new Data.
     @Override
     protected void onResume() {
         super.onResume();
