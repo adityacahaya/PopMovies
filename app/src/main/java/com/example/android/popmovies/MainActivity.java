@@ -52,6 +52,8 @@ public class MainActivity extends AppCompatActivity implements
     private static final int DB_SEARCH_LOADER = 2;
     private static final String SEARCH_QUERY_URL_EXTRA = "query";
 
+    private Bundle bundle;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements
         Log.i("ccc","save MainActivity");
         state.putInt(GRIDVIEW_POSITION, mGridView.getFirstVisiblePosition());
         Log.i("ccc",state.getInt(GRIDVIEW_POSITION)+"");
+        bundle = state;
         super.onSaveInstanceState(state);
     }
 
@@ -104,9 +107,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    // if user click an item in 'Favorite' list, after user back from DetailActivity even user
-    // click favortie or not, the scroll position in 'Favorite' list will not back to before because
-    // the adapter of GridView will update with new Data.
     @Override
     protected void onResume() {
         super.onResume();
@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements
                 @Override
                 protected void onStartLoading() {
                     if (dataFilms != null) {
-                        Log.i("ccc","deliver");
+                        Log.i("ccc","deliver2");
                         deliverResult(dataFilms);
                     } else {
                         forceLoad();
@@ -297,7 +297,11 @@ public class MainActivity extends AppCompatActivity implements
                 }
                 @Override
                 public void deliverResult(List<DataFilm> data) {
+                    Log.i("ccc","deliverResult2");
                     dataFilms = data;
+                    if (bundle != null) {
+                        onRestoreInstanceState(bundle);
+                    }
                     super.deliverResult(data);
                 }
             };
