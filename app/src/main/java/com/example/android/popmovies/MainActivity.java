@@ -75,10 +75,16 @@ public class MainActivity extends AppCompatActivity{
                         Log.i("ccc","Popular saveInstance");
                         flag = savedInstanceState.getInt("FLAG");
                         if (flag == 1){
+                            mLoadingIndicator.setVisibility(View.INVISIBLE);
                             dataFilmArrayList = savedInstanceState.getParcelableArrayList("DATA_GRIDVIEW_NOW");
-                            int positionGrid = savedInstanceState.getInt(GRIDVIEW_POSITION);
-                            mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
-                            mGridView.setSelection(positionGrid);
+                            if (dataFilmArrayList != null) {
+                                showJsonDataView();
+                                int positionGrid = savedInstanceState.getInt(GRIDVIEW_POSITION);
+                                mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
+                                mGridView.setSelection(positionGrid);
+                            } else {
+                                showErrorMessage();
+                            }
                         }else{
                             new CallbackPopularAndTopRated().makeSearchQuery(getString(R.string.popular_param));
                             flag = 1;
@@ -95,10 +101,16 @@ public class MainActivity extends AppCompatActivity{
                         Log.i("ccc","TopRated saveInstance");
                         flag = savedInstanceState.getInt("FLAG");
                         if (flag == 2){
+                            mLoadingIndicator.setVisibility(View.INVISIBLE);
                             dataFilmArrayList = savedInstanceState.getParcelableArrayList("DATA_GRIDVIEW_NOW");
-                            int positionGrid = savedInstanceState.getInt(GRIDVIEW_POSITION);
-                            mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
-                            mGridView.setSelection(positionGrid);
+                            if (dataFilmArrayList != null) {
+                                showJsonDataView();
+                                int positionGrid = savedInstanceState.getInt(GRIDVIEW_POSITION);
+                                mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
+                                mGridView.setSelection(positionGrid);
+                            } else {
+                                showErrorMessage();
+                            }
                         }else{
                             new CallbackPopularAndTopRated().makeSearchQuery(getString(R.string.top_rated_param));
                             flag = 2;
@@ -115,10 +127,16 @@ public class MainActivity extends AppCompatActivity{
                         Log.i("ccc","Favorite saveInstance");
                         flag = savedInstanceState.getInt("FLAG");
                         if (flag == 3){
+                            mLoadingIndicator.setVisibility(View.INVISIBLE);
                             dataFilmArrayList = savedInstanceState.getParcelableArrayList("DATA_GRIDVIEW_NOW");
-                            int positionGrid = savedInstanceState.getInt(GRIDVIEW_POSITION);
-                            mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
-                            mGridView.setSelection(positionGrid);
+                            if (dataFilmArrayList != null) {
+                                showJsonDataView();
+                                int positionGrid = savedInstanceState.getInt(GRIDVIEW_POSITION);
+                                mGridView.setAdapter(new GridViewAdapter(MainActivity.this, dataFilmArrayList));
+                                mGridView.setSelection(positionGrid);
+                            } else {
+                                showErrorMessage();
+                            }
                         }else{
                             new CallbackFavorite().makeSearchQuery();
                             flag = 3;

@@ -2,4 +2,5 @@
 <resources>
     <!-- TextView detail size -->
     <dimen name="text_size">15sp</dimen>
+    <dimen name="line_size">8dp</dimen>
 </resources>
